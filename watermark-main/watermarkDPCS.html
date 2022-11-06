@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Công cụ chèn logo DPCS</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="description" content="Công cụ tự chèn logo DPCS" />
+    <meta name="author" content="Phoenixcoded" />
+</head>
+
+<body>
+    <div style="position: absolute;top: 0;bottom: 0;left: 0;right: 0;" ondrop="dropHandler(event);" ondragenter="dragEnterHandler(event);" ondragover="dragOverHandler(event);" ondragleave="dragEndHandler(event);">
+        <div class="container" role="main">
+            <div id="menu">
+                <div class="upload-btn-wrapper">
+                    <button class="btn btn-primary" onclick="document.getElementById('product-image-upload').click();">Upload a file</button>
+                    <input type="file" name="product-image-upload" id="product-image-upload" accept=".jpeg, .jpg, .png, .webp" multiple />
+                    <select class="form-select" aria-label="Default select example" id="sl-mark-type" onclick="changeMarkType(event)">
+                        <option selected value="0">Mặc định</option>
+                        <!-- <option value="1">Cũ</option> -->
+                        <option value="3">Logo ẩn ở giữa</option>
+                        <option value="200">K chèn</option>
+                    </select>
+                </div>
+                <div>
+                    <p>
+                        Thả hình ảnh, paste hoặc upload file tại đây.
+                        <br>
+                        Có thể up nhiều hình ảnh 1 lúc và chọn rồi bấm download ở dưới, có thể mất khá nhiều thời gian khi upload nhiều ảnh. Vui lòng đợi đến khi có cửa sổ tải xuống, tránh click nhiều lần.
+                        <br>
+                        <span style="color: brown;">Hãy đổi kiểu chèn sang kiểu khác nếu watermark làm hình ảnh bị rối mắt. Chọn hình ảnh cần đổi kiểu chèn sau đó đổi phần kiểu chèn.</span>
+                    </p>
+                    <!-- <button class="button" id="btn-select-mode" onclick="selectMode()">Select Mode</button> -->
+                    <button class="button" id="btn-select" onclick="selectAll()">Select All</button>
+                    <button class="button" id="btn-download" onclick="downloadImages()" style="display: none">Download</button>
+                </div>
+            </div>
+            <div id="result">
+                <!-- <img id="imageBlock"/ download="new-image-name.jpg"> -->
+            </div>
+        </div>
+        <div class="file-dropzone" style="display: none;">
+            <h1>
+                Drop image anywhere
+            </h1>
+        </div>
+    </div>
+</body>
+<style type="text/css">
+</style>
+<link href="style.css" rel="stylesheet">
+<!-- Fontawesome -->
+<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+<!-- <script src="https://sp.zalo.me/plugins/sdk.js"></script> -->
+<script src="//cdn.rawgit.com/satazor/SparkMD5/master/spark-md5.min.js"></script>
+<!-- SaveZip File -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.2.2/jszip.min.js" integrity="sha256-gy5W5/rXWluWXFRvMWFFMVhocfpBe7Tf4SW2WMfjs4E=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip-utils/0.1.0/jszip-utils.min.js" integrity="sha256-5GhqDpPB1bpRluB0hmS7EJkMH+EVyqUP00CvFEksTVw=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js" integrity="sha256-FPJJt8nA+xL4RU6/gsriA8p8xAeLGatoyTjldvQKGdE=" crossorigin="anonymous"></script>
+<!-- fancybox -->
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha512-uURl+ZXMBrF4AwGaWmEetzrd+J5/8NRkWAvJx5sbPSSuOb0bZLqf+tOzniObO00BjHa/dD7gub9oCGMLPQHtQA==" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.css" integrity="sha512-nNlU0WK2QfKsuEmdcTwkeh+lhGs6uyOxuUs+n+0oXSYDok5qy0EI0lt01ZynHq6+p/tbgpZ7P+yUb+r71wqdXg==" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.js" integrity="sha512-j7/1CJweOskkQiS5RD9W8zhEG9D9vpgByNGxPIqkO5KrXrwyDAroM9aQ9w8J7oRqwxGyz429hPVk/zR6IOMtSA==" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha512-H9jrZiiopUdsLpg94A333EfumgUBpO9MdbxStdeITo+KEIMaNfHNvwyjjDJb+ERPaRS6DpyRlKbvPUasNItRyw==" crossorigin="anonymous" />
+<script type="text/javascript">
+var links = [];
+preloadResource();
+$(document).ready(function() {
+    $('[data-fancybox="gallery"]').fancybox({
+        thumbs: {
+            autoStart: true
+        }
+    });
+});
+
+function dropHandler(ev) {
+    document.getElementsByClassName('file-dropzone')[0].style.display = "none";
+    console.log('File(s) dropped');
+    document.getElementsByClassName('container')[0].classList.remove("is-dragover");
+    // Prevent default behavior (Prevent file from being opened)
+    ev.preventDefault();
+
+    if (ev.dataTransfer.items) {
+        // Use DataTransferItemList interface to access the file(s)
+        for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+            // If dropped items aren't files, reject them
+            if (ev.dataTransfer.items[i].type.indexOf("image") == -1) continue;
+            // Crossbrowser support for URL
+            var URLObj = window.URL || window.webkitURL;
+            // console.log(ev.dataTransfer.items[i].getAsFile());
+            var imageObjectURL = URLObj.createObjectURL(ev.dataTransfer.items[i].getAsFile());
+            drawImage("marked-" + ev.dataTransfer.items[i].getAsFile().name, imageObjectURL);
+        }
+    } else {
+        // Use DataTransfer interface to access the file(s)
+        for (var i = 0; i < ev.dataTransfer.files.length; i++) {
+            console.log('... file[' + i + '].name = ' + ev.dataTransfer.files[i].name);
+        }
+    }
+}
+
+function dragEnterHandler(ev) {
+    // console.log('File(s) in drop zone');
+    // document.getElementsByClassName('container')[0].classList.add("is-dragover");
+    document.getElementsByClassName('file-dropzone')[0].style.display = "block";
+}
+
+function dragOverHandler(ev) {
+    // document.getElementsByClassName('file-dropzone')[0].style.display = "block";
+    // document.getElementsByClassName('file-dropzone')[0].style.display = "none";
+    // Prevent default behavior (Prevent file from being opened)
+    ev.preventDefault();
+
+}
+
+function dragEndHandler(ev) {
+    // console.log(ev);
+    if (ev.pageX != 0 || ev.pageY != 0) {
+        return false;
+    }
+    console.log('File(s) out drop zone');
+    // document.getElementsByClassName('container')[0].classList.remove("is-dragover");
+    document.getElementsByClassName('file-dropzone')[0].style.display = "none";
+}
+
+/**
+ * This handler retrieves the images from the clipboard as a blob and returns it in a callback.
+ * 
+ * @see http://ourcodeworld.com/articles/read/491/how-to-retrieve-images-from-the-clipboard-with-javascript-in-the-browser
+ * @param pasteEvent 
+ * @param callback 
+ */
+function retrieveImageFromClipboardAsBlob(pasteEvent, callback) {
+    if (pasteEvent.clipboardData == false) {
+        if (typeof(callback) == "function") {
+            callback(undefined);
+        }
+    };
+
+    var items = pasteEvent.clipboardData.items;
+
+    if (items == undefined) {
+        if (typeof(callback) == "function") {
+            callback(undefined);
+        }
+    };
+
+    for (var i = 0; i < items.length; i++) {
+        // Skip content if not image
+        if (items[i].type.indexOf("image") == -1) continue;
+        // Retrieve image on clipboard as blob
+        var blob = items[i].getAsFile();
+
+        if (typeof(callback) == "function") {
+            callback(blob);
+        }
+    }
+}
+
+window.addEventListener("paste", function(e) {
+    // Handle the event
+    retrieveImageFromClipboardAsBlob(e, function(imageBlob) {
+        // If there's an image, display it in the canvas
+        if (imageBlob) {
+            // Crossbrowser support for URL
+            let URLObj = window.URL || window.webkitURL;
+            let imageObjectURL = URLObj.createObjectURL(imageBlob);
+            drawImage("marked-new-image-" + Date.now() + Math.floor(Math.random() * 101) + ".jpg", imageObjectURL);
+        }
+    });
+}, false);
+var image_uploader = document.getElementById('product-image-upload');
+image_uploader.addEventListener('change', function(e) {
+    var imgPath = this.value;
+    // console.log(this.files[0]);
+    var extn = imgPath.substring(imgPath.lastIndexOf('.') + 1).toLowerCase();
+    if (extn == "gif" || extn == "png" || extn == "jpg" || extn == "jpeg") {
+        if (typeof(FileReader) != "undefined") {
+            //loop for each file selected for uploaded.
+            for (var i = 0; i < image_uploader.files.length; i++) {
+                let URLObj = window.URL || window.webkitURL;
+                let imageObjectURL = URLObj.createObjectURL(image_uploader.files[i]);
+                drawImage("marked-" + image_uploader.files[i].name, imageObjectURL);
+            };
+        } else {
+            alert("This browser does not support FileReader.");
+        }
+    } else {
+        alert("Pls select only images");
+    }
+
+});
+async function changeMarkType(event) {
+    if (event.pointerId == 0) {
+        var mark_type = $('#sl-mark-type')[0].value;
+        var listSelected = document.getElementsByClassName("thumbChecked");
+        for (var i = 0; i < listSelected.length; i++) {
+            (async index => {
+                if (listSelected[index].children[0].getAttribute('origin')) {
+                    var canvas = await markImage(listSelected[index].children[0].getAttribute('origin'), mark_type);
+                    // URL.revokeObjectURL(listSelected[index].children[0].src); 
+                    var blob = await new Promise(resolve => canvas.toBlob(resolve));
+                    url = URL.createObjectURL(blob);
+                    listSelected[index].children[0].src = url;
+                    listSelected[index].children[1].href = url;
+                    listSelected[index].children[0].setAttribute("mark-type", mark_type);
+                    canvas.remove();
+                }
+            })(i);
+        }
+    }
+}
+async function preloadResource() {
+    //logo cũ
+    // window.wmTop = new Image();
+    // window.wmBottom = new Image();
+    // window.wmLogo = new Image();
+    // window.wmWebsite = new Image();
+    // window.wmName = new Image();
+    // window.wmHotline = new Image();
+    // window.wmLogo2 = new Image();
+    // window.wmBottom2 = new Image();
+    // window.wmCenter2 = new Image();
+    // window.wmHotline2 = new Image();
+    // wmTop.src = "DPCS/top.png";
+    // wmBottom.src = "DPCS/bottom.png";
+    // wmLogo.src = "DPCS/logo.png";
+    // wmWebsite.src = "DPCS/website.png";
+    // wmName.src = "DPCS/name.png";
+    // wmHotline.src = "DPCS/hotline.png";
+    // wmLogo2.src = "DPCS/logo2.png";
+    // wmBottom2.src = "DPCS/bottom2.png";
+    // wmCenter2.src = "DPCS/center2.png";
+    // wmHotline2.src = "DPCS/hotline2.png"
+    // await Promise.all([wmTop.decode(), wmBottom.decode(), wmLogo.decode(), wmWebsite.decode(), wmName.decode(), wmHotline.decode()]);
+    // //logo mới
+    window.wmLeft = new Image();
+    window.wmRight = new Image();
+    window.wmLogo = new Image();
+    window.wmCenter = new Image();
+    window.wmCenter1 = new Image();
+    window.wmNumber = new Image();
+    wmLeft.src = "DPCS/nleft.png";
+    wmRight.src = "DPCS/nright.png";
+    wmLogo.src = "DPCS/nlogo.png";
+    wmCenter.src = "DPCS/ncenter.png";
+    wmCenter1.src = "DPCS/ncenter1.png";
+    wmNumber.src = "DPCS/nnumber.png";
+    await Promise.all([wmLeft.decode(), wmRight.decode(), wmLogo.decode(), wmCenter.decode(), wmCenter1.decode(), wmNumber.decode()]);
+}
+async function drawImage(filename, imageObjectURL) {
+    var mark_type = $('#sl-mark-type')[0].value;
+    var canvas = await markImage(imageObjectURL, mark_type);
+    canvas.toBlob(function(blob) {
+        var result = document.getElementById('result');
+        url = URL.createObjectURL(blob);
+        var divElement = document.createElement("div");
+
+        divElement.classList.add("imageBlock");
+        var thumbElement = document.createElement("img");
+        thumbElement.classList.add("imageItem");
+        // thumbElement.style.backgroundImage = 'url("' + url + '")';
+        thumbElement.src = url;
+        // thumbElement.style.backgroundSize  = 'contain';
+        thumbElement.setAttribute("download", filename);
+        thumbElement.setAttribute("origin", imageObjectURL);
+        thumbElement.setAttribute("mark-type", mark_type);
+
+        thumbElement.setAttribute("draggable", false);
+        var imageElement = document.createElement("a");
+        imageElement.classList.add("imageZoomIcon");
+        imageElement.setAttribute("href", url);
+        imageElement.setAttribute("data-fancybox", "gallery");
+
+        var iconZoomElement = document.createElement("i");
+        iconZoomElement.classList.add("icon-zoom-in");
+        iconZoomElement.classList.add("icon-3x");
+
+        imageElement.appendChild(iconZoomElement);
+        divElement.appendChild(thumbElement);
+        divElement.appendChild(imageElement);
+
+        result.appendChild(divElement);
+        canvas.remove();
+    });
+
+}
+async function markImage(imageObjectURL, mark_type) {
+    // console.log(e);
+    var image = new Image();
+    image.src = imageObjectURL;
+    await image.decode();
+
+    var isheight = image.width < image.height ? true : false;
+    var base_size = isheight ? image.width : image.height;//
+    var scale_ratio = image.width < 600 || image.height < 600 ? 600 / base_size : 1;//tăng kích thước hình ảnh nếu hình ảnh nhỏ hơn 600
+    var frame_ratio = isheight ? image.height / image.width : image.width / image.width;
+    var wmscale_ratio = frame_ratio;
+    var fix_size = scale_ratio * base_size;//chiều ngắn nhất của hình ảnh
+
+    var canvas = document.createElement("CANVAS");
+    var context = canvas.getContext('2d');
+    canvas.width = image.width * scale_ratio;
+    canvas.height = image.height * scale_ratio;
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    // console.log(await getImageBrightness(canvas, canvas.width - canvas.width / 2 - fix_size * 0.3 * wmscale_ratio / 2, canvas.height - canvas.height / 2 - wmCenter.height / wmCenter.width * fix_size * 0.3 * wmscale_ratio / 2, fix_size * 0.3 * wmscale_ratio, wmCenter.height / wmCenter.width * fix_size * 0.3 * wmscale_ratio));
+    // if (mark_type == 1) {
+    //     context.drawImage(wmTop, 0, 0, canvas.width, wmTop.height * (isheight ? canvas.width / wmTop.width : canvas.height / wmTop.width));
+    //     context.drawImage(wmBottom, 0, canvas.height - (isheight ? wmBottom.height * canvas.width / wmBottom.width : wmBottom.height * canvas.height / wmBottom.width), canvas.width, isheight ? wmBottom.height * canvas.width / wmBottom.width : wmBottom.height * canvas.height / wmBottom.width);
+    //     context.drawImage(wmLogo, 0, 0, canvas.width * 0.25 * (isheight ? 1 : canvas.height / canvas.width), canvas.width * 0.25 * wmLogo.height / wmLogo.width * (isheight ? 1 : canvas.height / canvas.width));
+    //     context.drawImage(wmWebsite, 20 * 0.4 * (isheight ? 1 : canvas.height / canvas.width), canvas.height - (isheight ? wmWebsite.height * canvas.width / wmWebsite.width : wmWebsite.height * canvas.height / wmWebsite.width) / 2 - canvas.width * 0.4 * wmWebsite.height / wmWebsite.width * (isheight ? 1 : canvas.height / canvas.width) / 6, canvas.width * 0.4 * (isheight ? 1 : canvas.height / canvas.width), canvas.width * 0.4 * wmWebsite.height / wmWebsite.width * (isheight ? 1 : canvas.height / canvas.width));
+    //     context.drawImage(wmName, canvas.width - 20 * 0.4 * (isheight ? 1 : canvas.height / canvas.width) - canvas.width * 0.4 * (isheight ? 1 : canvas.height / canvas.width), (isheight ? wmName.height * canvas.width / wmName.width : wmName.height * canvas.height / wmName.width) / 16 - canvas.width * 0.4 * wmName.height / wmName.width * (isheight ? 1 : canvas.height / canvas.width) / 16, canvas.width * 0.4 * (isheight ? 1 : canvas.height / canvas.width), canvas.width * 0.4 * wmName.height / wmName.width * (isheight ? 1 : canvas.height / canvas.width));
+    //     context.drawImage(wmHotline, canvas.width - 20 * 0.4 * (isheight ? 1 : canvas.height / canvas.width) - canvas.width * 0.4 * (isheight ? 1 : canvas.height / canvas.width), canvas.height - (isheight ? wmHotline.height * canvas.width / wmHotline.width : wmHotline.height * canvas.height / wmHotline.width) / 1.5 - canvas.width * 0.4 * wmHotline.height / wmHotline.width * (isheight ? 1 : canvas.height / canvas.width) / 1.5, canvas.width * 0.4 * (isheight ? 1 : canvas.height / canvas.width), canvas.width * 0.4 * wmHotline.height / wmHotline.width * (isheight ? 1 : canvas.height / canvas.width));
+    // }else if (mark_type == 2) {
+
+    // } else {
+    //     context.drawImage(wmLogo2, canvas.width * 0.01, 0, canvas.width * 0.216 * (isheight ? 1 : canvas.height / canvas.width), canvas.width * 0.216 * wmLogo2.height / wmLogo2.width * (isheight ? 1 : canvas.height / canvas.width));
+    //     context.drawImage(wmBottom2, 0, canvas.height - (isheight ? wmBottom2.height * canvas.width / wmBottom2.width : wmBottom2.height * canvas.height / wmBottom2.width), canvas.width, isheight ? wmBottom2.height * canvas.width / wmBottom2.width : wmBottom2.height * canvas.height / wmBottom2.width);
+    //     context.drawImage(wmCenter2, canvas.width - canvas.width / 2 - fix_size * 0.3 * wmscale_ratio / 2, canvas.height - canvas.height / 2 - wmCenter2.height / wmCenter2.width * fix_size * 0.3 * wmscale_ratio / 2, fix_size * 0.3 * wmscale_ratio, wmCenter2.height / wmCenter2.width * fix_size * 0.3 * wmscale_ratio);
+    //     context.drawImage(wmHotline2, canvas.width - fix_size * 0.46, canvas.height - fix_size / 9 - fix_size * 0.5 * wmHotline2.height/wmHotline2.width/2, fix_size * 0.45, fix_size * 0.45 * wmHotline2.height/wmHotline2.width);
+    // }
+    
+    // var brightness = await getImageBrightness(canvas, canvas.width - canvas.width / 2 - fix_size * 0.3 * wmscale_ratio / 2, canvas.height - canvas.height / 2 - wmCenter.height / wmCenter.width * fix_size * 0.3 * wmscale_ratio / 2, fix_size * 0.3 * wmscale_ratio, wmCenter.height / wmCenter.width * fix_size * 0.3 * wmscale_ratio);
+    // if (brightness < 8){
+    // context.drawImage(wmCenter, canvas.width - canvas.width / 2 - fix_size * 0.3 * wmscale_ratio / 2, canvas.height - canvas.height / 2 - wmCenter.height / wmCenter.width * fix_size * 0.3 * wmscale_ratio / 2, fix_size * 0.3 * wmscale_ratio, wmCenter.height / wmCenter.width * fix_size * 0.3 * wmscale_ratio);
+    // }else {   
+    // context.drawImage(wmCenter2, canvas.width - canvas.width / 2 - fix_size * 0.3 * wmscale_ratio / 2, canvas.height - canvas.height / 2 - wmCenter2.height / wmCenter2.width * fix_size * 0.3 * wmscale_ratio / 2, fix_size * 0.3 * wmscale_ratio, wmCenter2.height / wmCenter2.width * fix_size * 0.3 * wmscale_ratio);
+    // }
+
+    if (mark_type == 3){
+        context.drawImage(wmLogo, 10, 10, canvas.width * 0.3 * (isheight ? 1 : canvas.height / canvas.width), canvas.width * 0.3 * wmLogo.height / wmLogo.width * (isheight ? 1 : canvas.height / canvas.width));
+        context.drawImage(wmCenter, canvas.width - canvas.width / 2 - fix_size * 0.3 * wmscale_ratio / 2, canvas.height - canvas.height / 2 - wmCenter.height / wmCenter.width * fix_size * 0.3 * wmscale_ratio / 2, fix_size * 0.3 * wmscale_ratio, wmCenter.height / wmCenter.width * fix_size * 0.3 * wmscale_ratio);
+        context.drawImage(wmNumber, canvas.width - 20 * 0.4 * (isheight ? 1 : canvas.height / canvas.width) - canvas.width * 0.4 * (isheight ? 1 : canvas.height / canvas.width), canvas.height - ((isheight ? wmNumber.height * canvas.width / wmNumber.width : wmNumber.height * canvas.height / wmNumber.width)+50)*0.4, canvas.width * 0.4 * (isheight ? 1 : canvas.height / canvas.width), canvas.width * 0.4 * wmNumber.height / wmNumber.width * (isheight ? 1 : canvas.height / canvas.width));
+    }
+    if (mark_type == 0){
+        context.drawImage(wmLogo, 0, 0, canvas.width * 0.3 * (isheight ? 1 : canvas.height / canvas.width), canvas.width * 0.3 * wmLogo.height / wmLogo.width * (isheight ? 1 : canvas.height / canvas.width));
+        context.drawImage(wmCenter1, canvas.width - canvas.width / 2 - fix_size / 2, canvas.height - canvas.height / 2 - wmCenter1.height / wmCenter1.width * fix_size / 2, fix_size, wmCenter1.height / wmCenter1.width * fix_size);
+        context.drawImage(wmNumber, canvas.width - 20 * 0.4 * (isheight ? 1 : canvas.height / canvas.width) - canvas.width * 0.4 * (isheight ? 1 : canvas.height / canvas.width), canvas.height - ((isheight ? wmNumber.height * canvas.width / wmNumber.width : wmNumber.height * canvas.height / wmNumber.width)+50)*0.4, canvas.width * 0.4 * (isheight ? 1 : canvas.height / canvas.width), canvas.width * 0.4 * wmNumber.height / wmNumber.width * (isheight ? 1 : canvas.height / canvas.width));
+    }
+    return canvas;
+}
+async function getImageBrightness(image, startX, startY, widthI, heightI) {
+    var colorSum = 0;
+    var canvas = document.createElement("canvas");
+    canvas.width = widthI;
+    canvas.height = heightI;
+
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(image, -startX, -startY);
+
+    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    // var blob = await new Promise(resolve => canvas.toBlob(resolve));  
+    // url = URL.createObjectURL(blob);
+    // console.log(url);
+    var data = imageData.data;
+    var r, g, b, avg;
+
+    for (var x = 0, len = data.length; x < len; x += 4) {
+        r = data[x];
+        g = data[x + 1];
+        b = data[x + 2];
+
+        avg = Math.floor((r + g + b) / 3);
+        colorSum += avg;
+    }
+
+    var brightness = Math.floor(colorSum / (image.width * image.height));
+    canvas.remove();
+    console.log(brightness);
+    return (brightness);
+}
+
+function selectAll() {
+    var btnSelect = document.getElementById('btn-select');
+    if (btnSelect.innerHTML == "Select All") {
+        btnSelect.innerHTML = "Deselect All";
+        var result = document.getElementById('result');
+        for (var i = 0; i < result.children.length; i++) {
+            if (!result.children[i].classList.contains('thumbChecked')) {
+                result.children[i].classList.add("thumbChecked");
+                links.push(result.children[i].children[0]);
+            }
+        }
+    } else {
+        btnSelect.innerHTML = "Select All";
+        var result = document.getElementById('result');
+        for (var i = 0; i < result.children.length; i++) {
+            if (result.children[i].classList.contains('thumbChecked')) {
+                result.children[i].classList.remove("thumbChecked");
+            }
+            links = [];
+        }
+    }
+    if (links.length != 0) {
+        document.getElementById('btn-download').style.display = "inline-block";
+    } else {
+        document.getElementById('btn-download').style.display = "none";
+    }
+}
+document.getElementById('result').addEventListener('click', function(e) {
+    // console.log(e.target);
+    if (e.target.classList.contains('imageItem')) {
+        var parentItem = e.target.parentElement;
+        var childrenItem = e.target;
+    }
+    if (e.target.classList.contains('imageBlock')) {
+        var parentItem = e.target;
+        var childrenItem = e.target.children[0];
+    }
+    
+    if (parentItem.classList.contains('thumbChecked')) {
+        links = links.splice(links.indexOf(childrenItem));
+        parentItem.classList.remove("thumbChecked");
+    } else {
+        parentItem.classList.add("thumbChecked");
+        links.push(childrenItem);
+    }
+    if (document.getElementsByClassName("thumbChecked").length == 0) {
+        document.getElementById('btn-download').style.display = "none";
+    }
+    if (document.getElementsByClassName("thumbChecked").length != 0) {
+        document.getElementById('btn-download').style.display = "inline-block";
+    }
+});
+
+function downloadImages() {
+    // console.log(links);
+    var zip = new JSZip();
+    var count = 0;
+    var uniqueObject = [];
+    var hashImages = [];
+    var zipFilename = "Pictures.zip";
+    links.forEach(function(url, i) {
+        // download1(url);
+        let filename = url.getAttribute("download");
+        // console.log(filename);
+        // loading a file and add it in a zip file
+        JSZipUtils.getBinaryContent(url.getAttribute("src"), function(err, data) {
+            // if (err) {
+            //     throw err; // or handle the error
+            // }
+            let rawHash = SparkMD5.ArrayBuffer.hash(data);
+            // console.log(rawHash);
+            let foundHash = hashImages.indexOf(rawHash);
+            if (foundHash == -1) {
+                hashImages.push(rawHash);
+                let foundIndex = uniqueObject.findIndex(obje => obje.name == filename);
+                if (foundIndex < 0) {
+                    // console.log("them1");
+                    uniqueObject.push({
+                        name: filename,
+                        count: 0,
+                    });
+                }
+                if (zip.file(filename) != null) {
+                    filename = filename.split('.', 2)[0] + (foundIndex < 0 ? "" : ("-d" + ++uniqueObject[foundIndex].count)) + (filename.split('.', 2).length == 2 ? ("." + filename.split('.', 2)[1]) : (".jpg"));
+                }
+                zip.file(filename, data, { binary: true });
+            }
+            count++;
+            if (count == links.length) {
+                zip.generateAsync({ type: 'blob' }).then(function(content) {
+                    saveAs(content, zipFilename);
+                });
+            }
+        });
+    });
+    function download1(img) {
+        
+        let filename = img.getAttribute("download");
+        //creating an invisible element
+        var element = document.createElement('a');
+        element.setAttribute('href', img.src);
+        element.setAttribute('download', filename);
+    
+        // Above code is equivalent to
+        // <a href="path of file" download="file name">
+        document.body.appendChild(element);
+    
+        //onClick property
+        element.click();
+    
+        document.body.removeChild(element);
+    }
+}
+</script>
+
+</html>

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Công cụ chèn logo DPTT</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="description" content="Công cụ tự chèn logo DPTT" />
+    <meta name="author" content="Phoenixcoded" />
+</head>
+
+<body>
+    <div style="position: absolute;top: 0;bottom: 0;left: 0;right: 0;" ondrop="dropHandler(event);" ondragenter="dragEnterHandler(event);" ondragover="dragOverHandler(event);" ondragleave="dragEndHandler(event);">
+        <div class="container" role="main">
+            <div id="menu">
+                <div class="upload-btn-wrapper">
+                    <button class="btn btn-primary" onclick="document.getElementById('product-image-upload').click();">Upload a file</button>
+                    <input type="file" name="product-image-upload" id="product-image-upload" accept=".jpeg, .jpg, .png, .webp" multiple />
+                    <select class="form-select" aria-label="Default select example" id="sl-mark-type" onchange="changeMarkType(event)">
+                      <option selected value="0">Mặc định</option>
+                      <option value="1">Khách Sạn</option>
+                      <option value="2">Nha Khoa</option>
+                      <option value="3">Hồng</option>
+                      <option value="4">0813866868</option>
+                      <option value="5">0837 97 4444</option>
+                      <option value="6">0522 18 7777</option>
+                      <option value="7">0961 88 7777</option>
+                    </select>
+                </div>
+                <div>
+                    <p>
+                        Thả hình ảnh, paste hoặc upload file tại đây.
+                        <br>
+                        Có thể up nhiều hình ảnh 1 lúc và chọn rồi bấm download ở dưới, có thể mất khá nhiều thời gian khi upload nhiều ảnh. Vui lòng đợi đến khi có cửa sổ tải xuống, tránh click nhiều lần.
+                    </p>
+                    <!-- <button class="button" id="btn-select-mode" onclick="selectMode()">Select Mode</button> -->
+                    <button class="button" id="btn-select" onclick="selectAll()">Select All</button>
+                    <button class="button" id="btn-download" onclick="generateZIP()" style="display: none">Download</button>
+                </div>
+            </div>
+            <div id="result">
+                <!-- <img id="imageBlock"/ download="new-image-name.jpg"> -->
+            </div>
+                           
+        </div>
+        <div class="file-dropzone" style="display: none;">
+            <h1>
+                Drop image anywhere
+            </h1>
+        </div>
+    </div>
+</body>
+<style type="text/css">
+</style>
+<link href="style.css" rel="stylesheet">
+<!-- Fontawesome -->
+<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+<!-- <script src="https://sp.zalo.me/plugins/sdk.js"></script> -->
+<script src="//cdn.rawgit.com/satazor/SparkMD5/master/spark-md5.min.js"></script>
+<!-- SaveZip File -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.2.2/jszip.min.js" integrity="sha256-gy5W5/rXWluWXFRvMWFFMVhocfpBe7Tf4SW2WMfjs4E=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip-utils/0.1.0/jszip-utils.min.js" integrity="sha256-5GhqDpPB1bpRluB0hmS7EJkMH+EVyqUP00CvFEksTVw=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js" integrity="sha256-FPJJt8nA+xL4RU6/gsriA8p8xAeLGatoyTjldvQKGdE=" crossorigin="anonymous"></script>
+<!-- fancybox -->
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha512-uURl+ZXMBrF4AwGaWmEetzrd+J5/8NRkWAvJx5sbPSSuOb0bZLqf+tOzniObO00BjHa/dD7gub9oCGMLPQHtQA==" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.css" integrity="sha512-nNlU0WK2QfKsuEmdcTwkeh+lhGs6uyOxuUs+n+0oXSYDok5qy0EI0lt01ZynHq6+p/tbgpZ7P+yUb+r71wqdXg==" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.js" integrity="sha512-j7/1CJweOskkQiS5RD9W8zhEG9D9vpgByNGxPIqkO5KrXrwyDAroM9aQ9w8J7oRqwxGyz429hPVk/zR6IOMtSA==" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha512-H9jrZiiopUdsLpg94A333EfumgUBpO9MdbxStdeITo+KEIMaNfHNvwyjjDJb+ERPaRS6DpyRlKbvPUasNItRyw==" crossorigin="anonymous" />
+<script type="text/javascript">
+var links = [];
+preloadResource();
+$(document).ready(function() {
+    $('[data-fancybox="gallery"]').fancybox({
+        thumbs: {
+            autoStart: true
+        }
+    });
+
+});
+
+function dropHandler(ev) {
+    document.getElementsByClassName('file-dropzone')[0].style.display = "none";
+    console.log('File(s) dropped');
+    document.getElementsByClassName('container')[0].classList.remove("is-dragover");
+    // Prevent default behavior (Prevent file from being opened)
+    ev.preventDefault();
+
+    if (ev.dataTransfer.items) {
+        // Use DataTransferItemList interface to access the file(s)
+        for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+            // If dropped items aren't files, reject them
+            if (ev.dataTransfer.items[i].type.indexOf("image") == -1) continue;
+            // Crossbrowser support for URL
+            var URLObj = window.URL || window.webkitURL;
+            // console.log(ev.dataTransfer.items[i].getAsFile());
+            var imageObjectURL = URLObj.createObjectURL(ev.dataTransfer.items[i].getAsFile());
+            drawImage("marked-" + ev.dataTransfer.items[i].getAsFile().name, imageObjectURL);
+        }
+    } else {
+        // Use DataTransfer interface to access the file(s)
+        for (var i = 0; i < ev.dataTransfer.files.length; i++) {
+            console.log('... file[' + i + '].name = ' + ev.dataTransfer.files[i].name);
+        }
+    }
+}
+
+function dragEnterHandler(ev) {
+    // console.log('File(s) in drop zone');
+    // document.getElementsByClassName('container')[0].classList.add("is-dragover");
+    document.getElementsByClassName('file-dropzone')[0].style.display = "block";
+}
+
+function dragOverHandler(ev) {
+    // document.getElementsByClassName('file-dropzone')[0].style.display = "block";
+    // document.getElementsByClassName('file-dropzone')[0].style.display = "none";
+    // Prevent default behavior (Prevent file from being opened)
+    ev.preventDefault();
+
+}
+
+function dragEndHandler(ev) {
+    // console.log(ev);
+    if (ev.pageX != 0 || ev.pageY != 0) {
+        return false;
+    }
+    console.log('File(s) out drop zone');
+    // document.getElementsByClassName('container')[0].classList.remove("is-dragover");
+    document.getElementsByClassName('file-dropzone')[0].style.display = "none";
+}
+
+/**
+ * This handler retrieves the images from the clipboard as a blob and returns it in a callback.
+ * 
+ * @see http://ourcodeworld.com/articles/read/491/how-to-retrieve-images-from-the-clipboard-with-javascript-in-the-browser
+ * @param pasteEvent 
+ * @param callback 
+ */
+function retrieveImageFromClipboardAsBlob(pasteEvent, callback) {
+    if (pasteEvent.clipboardData == false) {
+        if (typeof(callback) == "function") {
+            callback(undefined);
+        }
+    };
+
+    var items = pasteEvent.clipboardData.items;
+
+    if (items == undefined) {
+        if (typeof(callback) == "function") {
+            callback(undefined);
+        }
+    };
+
+    for (var i = 0; i < items.length; i++) {
+        // Skip content if not image
+        if (items[i].type.indexOf("image") == -1) continue;
+        // Retrieve image on clipboard as blob
+        var blob = items[i].getAsFile();
+
+        if (typeof(callback) == "function") {
+            callback(blob);
+        }
+    }
+}
+
+window.addEventListener("paste", function(e) {
+    // Handle the event
+    retrieveImageFromClipboardAsBlob(e, function(imageBlob) {
+        // If there's an image, display it in the canvas
+        if (imageBlob) {
+            // Crossbrowser support for URL
+            let URLObj = window.URL || window.webkitURL;
+            let imageObjectURL = URLObj.createObjectURL(imageBlob);
+            drawImage("marked-new-image-" + Date.now() + Math.floor(Math.random() * 101) + ".jpg", imageObjectURL);
+        }
+    });
+}, false);
+var image_uploader = document.getElementById('product-image-upload');
+image_uploader.addEventListener('change', function(e) {
+    var imgPath = this.value;
+    // console.log(this.files[0]);
+    var extn = imgPath.substring(imgPath.lastIndexOf('.') + 1).toLowerCase();
+    if (extn == "gif" || extn == "png" || extn == "jpg" || extn == "jpeg") {
+        if (typeof(FileReader) != "undefined") {
+            //loop for each file selected for uploaded.
+            for (var i = 0; i < image_uploader.files.length; i++) {
+                let URLObj = window.URL || window.webkitURL;
+                var imageObjectURL = URLObj.createObjectURL(image_uploader.files[i]);
+                drawImage("marked-" + image_uploader.files[i].name, imageObjectURL);
+            };
+        } else {
+            alert("This browser does not support FileReader.");
+        }
+    } else {
+        alert("Pls select only images");
+    }
+
+});
+async function changeMarkType(event){
+    // console.log(event);
+        var mark_type = $('#sl-mark-type')[0].value;
+        var listSelected = document.getElementsByClassName("thumbChecked");
+        for (var i = 0; i < listSelected.length; i++) {
+            (async index=>{
+                if (listSelected[index].children[0].getAttribute('origin')) {
+                    var canvas = await markImage(listSelected[index].children[0].getAttribute('origin'), mark_type);
+                    // URL.revokeObjectURL(listSelected[index].children[0].src); 
+                    var blob = await new Promise(resolve => canvas.toBlob(resolve));  
+                    url = URL.createObjectURL(blob);
+                    listSelected[index].children[0].src = url;
+                    listSelected[index].children[1].href = url;
+                    listSelected[index].children[0].setAttribute("mark-type", mark_type);
+                    canvas.remove();
+                }
+            })(i);
+        }
+}
+async function preloadResource() {
+    window.wmBottom = new Image();
+    window.wmLogo = new Image();
+    window.wmLogo1 = new Image();
+    window.wmHotline = new Image();
+    window.wmCenter = new Image();
+    window.wmCenter2 = new Image();
+    window.wmLogoBottom = new Image();
+    window.wmLogoBottom1 = new Image();
+    window.wmLogoBottom2 = new Image();
+    window.wmNhaKhoa = new Image();
+    window.wmLogoHong = new Image();
+    window.wmLogoMin = new Image();
+    window.wmLogoNhan = new Image();
+    window.wmLogoMi = new Image();
+    window.wmLogo0961887777 = new Image();
+    window.wm0838344444 = new Image();
+    window.wm0813866868 = new Image();
+    window.wm0837974444 = new Image();
+    window.wm0522187777 = new Image();
+    window.wm0961887777 = new Image();
+    wmBottom.src = "TT/bottom.png";
+    wmLogo.src = "TT/logo.png";
+    wmLogo1.src = "TT/logon1.png";
+    wmHotline.src = "TT/sdt.png";
+    wmCenter.src = "TT/center.png";
+    wmCenter2.src = "TT/center2.png";
+    wmLogoBottom.src = "TT/logobottom.png";
+    wmLogoBottom1.src = "TT/logobottomn1.png";
+    wmLogoBottom2.src = "TT/hl2.png";
+    wmNhaKhoa.src = "TT/nhakhoa.png";
+    wmLogoHong.src = "TT/logohong.png";
+    wmLogoMin.src = "TT/logomin.png";
+    wmLogoNhan.src = "TT/logonhan.png";
+    wmLogoMi.src = "TT/logomi.png";
+    wmLogo0961887777.src = "TT/logo0961887777.png";
+    wm0838344444.src = "TT/083 834 4444.png";
+    wm0813866868.src = "TT/0813 86 6868.png";
+    wm0837974444.src = "TT/083 797 4444.png";
+    wm0522187777.src = "TT/0522 18 7777.png";
+    wm0961887777.src = "TT/0961887777.png";
+    await Promise.all([wmBottom.decode(), wmLogo.decode(), wmLogo1.decode(), wmHotline.decode(), wmCenter.decode(), wmCenter2.decode(), wmLogoBottom.decode(), wmLogoBottom1.decode(), wmLogoBottom2.decode(), wmNhaKhoa.decode(), wmLogoHong.decode(), wmLogoMin.decode(), wmLogoNhan.decode(), wmLogoMi.decode(), wm0838344444.decode(), wm0813866868.decode(), wm0837974444.decode(), wm0522187777.decode(), wmLogo0961887777.decode(), wm0961887777.decode()]);
+}
+async function drawImage(filename, imageObjectURL) {
+    var mark_type = $('#sl-mark-type')[0].value;
+    var canvas = await markImage(imageObjectURL, mark_type);
+    canvas.toBlob(function(blob) {
+        var result = document.getElementById('result');
+        url = URL.createObjectURL(blob);
+        var divElement = document.createElement("div");
+
+        divElement.classList.add("imageBlock");
+        var thumbElement = document.createElement("img");
+        thumbElement.classList.add("imageItem");
+        // thumbElement.style.backgroundImage = 'url("' + url + '")';
+        thumbElement.src = url;
+        // thumbElement.style.backgroundSize  = 'contain';
+        thumbElement.setAttribute("download", filename);
+        thumbElement.setAttribute("origin", imageObjectURL);
+        thumbElement.setAttribute("mark-type", mark_type);
+
+        thumbElement.setAttribute("draggable", false);
+        var imageElement = document.createElement("a");
+        imageElement.classList.add("imageZoomIcon");
+        imageElement.setAttribute("href", url);
+        imageElement.setAttribute("data-fancybox", "gallery");
+
+        var iconZoomElement = document.createElement("i");
+        iconZoomElement.classList.add("icon-zoom-in");
+        iconZoomElement.classList.add("icon-3x");
+
+        imageElement.appendChild(iconZoomElement);
+        divElement.appendChild(thumbElement);
+        divElement.appendChild(imageElement);
+
+        result.appendChild(divElement);
+        canvas.remove();
+    });
+
+}
+async function markImage(imageObjectURL, mark_type){
+    // console.log(e);
+    var image = new Image();
+    image.src = imageObjectURL;
+    await image.decode();
+    
+    var isheight = image.width < image.height ? true : false;
+    var base_size = isheight ? image.width : image.height;
+    var scale_ratio = image.width < 600 || image.height < 600 ? 600 / base_size : 1;
+    var frame_ratio = isheight ? image.height / image.width : image.width / image.width;
+    var wmscale_ratio = frame_ratio;
+    var fix_size = scale_ratio * base_size;
+
+    var canvas = document.createElement("CANVAS");
+    var context = canvas.getContext('2d');
+    canvas.width = image.width * scale_ratio;
+    canvas.height = image.height * scale_ratio;
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    // console.log(await getImageBrightness(canvas, canvas.width - canvas.width / 2 - fix_size * 0.3 * wmscale_ratio / 2, canvas.height - canvas.height / 2 - wmCenter.height / wmCenter.width * fix_size * 0.3 * wmscale_ratio / 2, fix_size * 0.3 * wmscale_ratio, wmCenter.height / wmCenter.width * fix_size * 0.3 * wmscale_ratio));
+    if (mark_type == 1){//khách sạn
+        context.drawImage(wmLogo1, fix_size * 0.01 * wmscale_ratio, fix_size * 0.003 * wmscale_ratio, fix_size * 0.33 * wmscale_ratio, wmLogo1.height / wmLogo1.width * fix_size * 0.33 * wmscale_ratio); //lấy tỉ lê h/w * với chiều rộng hiện tại là ra chiều cao
+        context.drawImage(wmLogoBottom1, canvas.width - fix_size * 0.35 * wmscale_ratio, canvas.height - fix_size * 0.02 * wmscale_ratio - wmLogoBottom1.height / wmLogoBottom1.width * fix_size * 0.33 * wmscale_ratio, fix_size * 0.33 * wmscale_ratio, wmLogoBottom1.height / wmLogoBottom1.width * fix_size * 0.33 * wmscale_ratio);
+    }
+    else if (mark_type == 2){//nha khoa
+        context.drawImage(wmLogo1, fix_size * 0.01 * wmscale_ratio, fix_size * 0.003 * wmscale_ratio, fix_size * 0.33 * wmscale_ratio, wmLogo1.height / wmLogo1.width * fix_size * 0.33 * wmscale_ratio); //lấy tỉ lê h/w * với chiều rộng hiện tại là ra chiều cao
+        context.drawImage(wmLogoBottom2, canvas.width - fix_size * 0.33 * wmscale_ratio, canvas.height - wmLogoBottom2.height / wmLogoBottom2.width * fix_size * 0.33 * wmscale_ratio, fix_size * 0.33 * wmscale_ratio, wmLogoBottom2.height / wmLogoBottom2.width * fix_size * 0.33 * wmscale_ratio);
+        context.drawImage(wmNhaKhoa, fix_size * 0.01 * wmscale_ratio, canvas.height - wmNhaKhoa.height / wmNhaKhoa.width * fix_size * 0.33 * wmscale_ratio, fix_size * 0.33 * wmscale_ratio, wmNhaKhoa.height / wmNhaKhoa.width * fix_size * 0.33 * wmscale_ratio);
+    }
+    else {
+        context.drawImage(wmBottom, 0, canvas.height - (isheight ? wmBottom.height * canvas.width / wmBottom.width : wmBottom.height * canvas.height / wmBottom.width), canvas.width, (isheight ? wmBottom.height * canvas.width / wmBottom.width : wmBottom.height * canvas.height / wmBottom.width));
+        context.drawImage(wmLogoBottom, canvas.width - canvas.width * 0.15 - fix_size * 0.25  / 2, canvas.height - fix_size / 12 - fix_size * 0.3  / 2, fix_size * 0.25 , fix_size * 0.25  * wmLogoBottom.height/wmLogoBottom.width);
+        if (mark_type == 3){//hong
+            context.drawImage(wmLogoHong, fix_size * 0.01 * wmscale_ratio, 0, canvas.width * 0.25 * (isheight ? 1 : canvas.height / canvas.width), canvas.width * 0.25 * wmLogoHong.height / wmLogoHong.width * (isheight ? 1 : canvas.height / canvas.width));
+            context.drawImage(wm0838344444, canvas.width * 0.05, canvas.height - fix_size / 20 - fix_size * 0.4 * wm0838344444.height/wm0838344444.width/2, fix_size * 0.4, fix_size * 0.4 * wm0838344444.height/wm0838344444.width);
+        }else if (mark_type == 4){//min
+            context.drawImage(wmLogoMin, fix_size * 0.01 * wmscale_ratio, 0, canvas.width * 0.25 * (isheight ? 1 : canvas.height / canvas.width), canvas.width * 0.25 * wmLogoMin.height / wmLogoMin.width * (isheight ? 1 : canvas.height / canvas.width));
+            context.drawImage(wm0813866868, canvas.width * 0.05, canvas.height - fix_size / 20 - fix_size * 0.4 * wm0813866868.height/wm0813866868.width/2, fix_size * 0.4, fix_size * 0.4 * wm0813866868.height/wm0813866868.width);
+        }else if (mark_type == 5){//nhan
+            context.drawImage(wmLogoNhan, fix_size * 0.01 * wmscale_ratio, 0, canvas.width * 0.25 * (isheight ? 1 : canvas.height / canvas.width), canvas.width * 0.25 * wmLogoNhan.height / wmLogoNhan.width * (isheight ? 1 : canvas.height / canvas.width));
+            context.drawImage(wm0837974444, canvas.width * 0.05, canvas.height - fix_size / 20 - fix_size * 0.4 * wm0837974444.height/wm0837974444.width/2, fix_size * 0.4, fix_size * 0.4 * wm0837974444.height/wm0837974444.width);
+        }else if (mark_type == 6){//mi
+            context.drawImage(wmLogoMi, fix_size * 0.01 * wmscale_ratio, 0, canvas.width * 0.25 * (isheight ? 1 : canvas.height / canvas.width), canvas.width * 0.25 * wmLogoMi.height / wmLogoMi.width * (isheight ? 1 : canvas.height / canvas.width));
+            context.drawImage(wm0522187777, canvas.width * 0.05, canvas.height - fix_size / 20 - fix_size * 0.4 * wm0522187777.height/wm0522187777.width/2, fix_size * 0.4, fix_size * 0.4 * wm0522187777.height/wm0522187777.width);
+        }else if (mark_type == 7){//0961887777
+            context.drawImage(wmLogo0961887777, fix_size * 0.01 * wmscale_ratio, 0, canvas.width * 0.25 * (isheight ? 1 : canvas.height / canvas.width), canvas.width * 0.25 * wmLogo0961887777.height / wmLogo0961887777.width * (isheight ? 1 : canvas.height / canvas.width));
+            context.drawImage(wm0961887777, canvas.width * 0.05, canvas.height - fix_size / 20 - fix_size * 0.4 * wm0961887777.height/wm0961887777.width/2, fix_size * 0.4, fix_size * 0.4 * wm0961887777.height/wm0961887777.width);
+        }else {
+            context.drawImage(wmLogo, 0, 0, canvas.width * 0.25 * (isheight ? 1 : canvas.height / canvas.width), canvas.width * 0.25 * wmLogo.height / wmLogo.width * (isheight ? 1 : canvas.height / canvas.width));
+            context.drawImage(wmHotline, canvas.width * 0.05, canvas.height - fix_size / 20 - fix_size * 0.4 * wmHotline.height/wmHotline.width/2, fix_size * 0.4, fix_size * 0.4 * wmHotline.height/wmHotline.width);
+        }
+    }
+    // var brightness = await getImageBrightness(canvas, canvas.width - canvas.width / 2 - fix_size * 0.3 * wmscale_ratio / 2, canvas.height - canvas.height / 2 - wmCenter.height / wmCenter.width * fix_size * 0.3 * wmscale_ratio / 2, fix_size * 0.3 * wmscale_ratio, wmCenter.height / wmCenter.width * fix_size * 0.3 * wmscale_ratio);
+    // if (brightness < 8){
+        context.drawImage(wmCenter, canvas.width - canvas.width / 2 - fix_size * 0.3 * wmscale_ratio / 2, canvas.height - canvas.height / 2 - wmCenter.height / wmCenter.width * fix_size * 0.3 * wmscale_ratio / 2, fix_size * 0.3 * wmscale_ratio, wmCenter.height / wmCenter.width * fix_size * 0.3 * wmscale_ratio);
+    // }else {   
+        context.drawImage(wmCenter2, canvas.width - canvas.width / 2 - fix_size * 0.3 * wmscale_ratio / 2, canvas.height - canvas.height / 2 - wmCenter2.height / wmCenter2.width * fix_size * 0.3 * wmscale_ratio / 2, fix_size * 0.3 * wmscale_ratio, wmCenter2.height / wmCenter2.width * fix_size * 0.3 * wmscale_ratio);
+    // }
+    return canvas;
+}
+async function getImageBrightness(image, startX, startY, widthI, heightI){
+    var colorSum = 0;
+    var canvas = document.createElement("canvas");
+    canvas.width = widthI;
+    canvas.height = heightI;
+
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(image, -startX, -startY);
+
+    var imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+    // var blob = await new Promise(resolve => canvas.toBlob(resolve));  
+    // url = URL.createObjectURL(blob);
+    // console.log(url);
+    var data = imageData.data;
+    var r,g,b,avg;
+
+      for(var x = 0, len = data.length; x < len; x+=4) {
+        r = data[x];
+        g = data[x+1];
+        b = data[x+2];
+
+        avg = Math.floor((r+g+b)/3);
+        colorSum += avg;
+    }
+
+    var brightness = Math.floor(colorSum / (image.width*image.height));
+    canvas.remove();
+    console.log(brightness);
+    return(brightness);
+}
+function selectAll() {
+    var btnSelect = document.getElementById('btn-select');
+    if (btnSelect.innerHTML == "Select All") {
+        btnSelect.innerHTML = "Deselect All";
+        var result = document.getElementById('result');
+        for (var i = 0; i < result.children.length; i++) {
+            if (!result.children[i].classList.contains('thumbChecked')) {
+                result.children[i].classList.add("thumbChecked");
+                links.push(result.children[i].children[0]);
+            }
+        }
+    } else {
+        btnSelect.innerHTML = "Select All";
+        var result = document.getElementById('result');
+        for (var i = 0; i < result.children.length; i++) {
+            if (result.children[i].classList.contains('thumbChecked')) {
+                result.children[i].classList.remove("thumbChecked");
+            }
+            links = [];
+        }
+    }
+    if (links.length != 0) {
+        document.getElementById('btn-download').style.display = "inline-block";
+    } else {
+        document.getElementById('btn-download').style.display = "none";
+    }
+}
+document.getElementById('result').addEventListener('click', function(e) {
+    // console.log(e.target);
+    if (e.target.classList.contains('imageItem')) {
+        if (e.target.parentElement.classList.contains('thumbChecked')) {
+            e.target.parentElement.classList.remove("thumbChecked");
+            if (document.getElementsByClassName("thumbChecked").length == 0) {
+                document.getElementById('btn-download').style.display = "none";
+            }
+        } else {
+            e.target.parentElement.classList.add("thumbChecked");
+            if (document.getElementsByClassName("thumbChecked").length != 0) {
+                document.getElementById('btn-download').style.display = "inline-block";
+            }
+        }
+    }
+    if (e.target.classList.contains('imageBlock')) {
+        if (e.target.classList.contains('thumbChecked')) {
+            e.target.classList.remove("thumbChecked");
+            if (document.getElementsByClassName("thumbChecked").length == 0) {
+                document.getElementById('btn-download').style.display = "none";
+            }
+        } else {
+            e.target.classList.add("thumbChecked");
+            if (document.getElementsByClassName("thumbChecked").length != 0) {
+                document.getElementById('btn-download').style.display = "inline-block";
+            }
+        }
+    }
+});
+
+async function generateZIP() {
+    document.getElementById('btn-download').style.display = "none";
+    // console.log('TEST');
+    var zip = new JSZip();
+    var count = 0;
+    var uniqueObject = [];
+    var hashImages = [];
+    var zipFilename = "Pictures.zip";
+    var listSelected = document.getElementsByClassName("thumbChecked");
+    for (var i = 0; i < listSelected.length; i++) {
+        if (listSelected[i].children[0].getAttribute('src')) {
+            var filename = listSelected[i].children[0].getAttribute("download");
+            await new Promise(resolve => {
+                JSZipUtils.getBinaryContent(listSelected[i].children[0].src, function(err, data) {
+                    // if (err) {
+                    //     throw err; // or handle the error
+                    // }
+                    let rawHash = SparkMD5.ArrayBuffer.hash(data);
+                    // console.log(rawHash);
+                    let foundHash = hashImages.indexOf(rawHash);
+                    if (foundHash == -1) {
+                        hashImages.push(rawHash);
+                        let foundIndex = uniqueObject.findIndex(obje => obje.name == filename);
+                        if (foundIndex < 0) {
+                            // console.log("them1");
+                            uniqueObject.push({
+                                name: filename,
+                                count: 0,
+                            });
+                        }
+                        if (zip.file(filename) != null) {
+                            filename = filename.split('.', 2)[0] + (foundIndex < 0 ? "" : ("-d" + ++uniqueObject[foundIndex].count)) + (filename.split('.', 2).length == 2 ? ("." + filename.split('.', 2)[1]) : (".jpg"));
+                        }
+                        zip.file(filename, data, { binary: true });
+                        resolve(1);
+                    }
+                    resolve(1);
+                });
+            });
+        }
+    }
+    zip.generateAsync({ type: 'blob' }).then(function(content) {
+        saveAs(content, zipFilename);
+    });
+    document.getElementById('btn-download').style.display = "inline-block";
+}
+</script>
+
+</html>
